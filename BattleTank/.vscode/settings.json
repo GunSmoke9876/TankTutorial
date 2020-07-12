@@ -1,0 +1,7 @@
+{
+	"files.exclude": {
+		"D:/UE4 Projects/TankTutorial/BattleTank/.vscode": true,
+		"D:/UE4 Projects/TankTutorial/BattleTank/Content": true,
+		"D:/UE4 Projects/TankTutorial/BattleTank/Intermediate": true
+	}
+}
