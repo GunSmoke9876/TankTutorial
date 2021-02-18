@@ -25,4 +25,6 @@ class BATTLETANK_API ATankAIController : public AAIController
 									   // function, not new one.
 	ATank* GetPlayerTank() const;
 	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
 };

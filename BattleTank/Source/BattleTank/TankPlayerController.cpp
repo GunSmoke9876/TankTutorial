@@ -36,17 +36,21 @@ ATank* ATankPlayerController::GetControlledTank() const
 
 void ATankPlayerController::AimTowardsCrosshair()
 {
-    if(!GetControlledTank())
+    auto ControlledTank = GetControlledTank();
+    if(!ControlledTank)
         return;
     //Then ray-trace to find intersection aiming line with the landscape.
     FVector AimingLocation;
-    GetSightRayAimLocation(&AimingLocation);
+    if (GetSightRayAimLocation(AimingLocation))
+    {
+        ControlledTank->AimAt(AimingLocation);
+    }
 
-    UE_LOG(LogTemp, Warning, TEXT("AimingLocation = %s"), *(AimingLocation.ToString()));
+    //UE_LOG(LogTemp, Warning, TEXT("AimingLocation = %s"), *(AimingLocation.ToString()));
 }
 
 //Get world location of linetrace through crosshair. True, if line of sight has an intersection with the world.
-bool ATankPlayerController::GetSightRayAimLocation(FVector* AimLocation) const
+bool ATankPlayerController::GetSightRayAimLocation(FVector &AimLocation) const
 {
     //get camera's coords
 
@@ -65,9 +69,41 @@ bool ATankPlayerController::GetSightRayAimLocation(FVector* AimLocation) const
     //Crosshair screen coords
     auto CrosshairPosition = FVector2D(ViewportWidth * CrosshairX, ViewportHeight * CrosshairY);
 
-    //Get camera coords and direction
+    //Get camera coords and aiming direction
+    FVector AimDirection; //Used to get look direction.
+    FVector AimStartLocation; //Used to get camera position (or crosshair position in 3D world - not sure).
+    if (GetLookDirection(CrosshairPosition, AimStartLocation, AimDirection))
+    {
+        GetLookVectorAimLocation(AimDirection, AimStartLocation, AimLocation);
+        return true;
+    }
+    return false;
+}
 
-    //For testing modify of the out parameter:
-    *AimLocation = FVector(1.0);
+//Get a look direction through a point on the screen
+bool ATankPlayerController::GetLookDirection(FVector2D PointOnScreen, FVector& SightStart, FVector& LookDirection) const
+{
+    
+    //FVector JunkArgument; //Used to get camera position, which we do not need.
+    return DeprojectScreenPositionToWorld(PointOnScreen.X, PointOnScreen.Y, SightStart, LookDirection);
+}
+
+//Get world position of the intersection point of specified ray with some object of the world
+bool ATankPlayerController::GetLookVectorAimLocation(FVector LookDirection, FVector LookStartLocation, FVector& LookLocation) const
+{
+    FHitResult HRes;
+    //another way to get a start of the ray is:
+    //auto LookStartLocation = PlayerCameraManager->GetCameraLocation();
+    auto EndLocation = LookStartLocation + LookDirection * MaxAimDistance;
+    if (GetWorld()->LineTraceSingleByChannel(HRes,
+                                             LookStartLocation,
+                                             EndLocation,
+                                             ECollisionChannel::ECC_Visibility) //for hitting anything that is visible
+        )
+    {
+        LookLocation = HRes.Location;
+        return true;
+    }
+    LookLocation = FVector(0);
     return false;
 }

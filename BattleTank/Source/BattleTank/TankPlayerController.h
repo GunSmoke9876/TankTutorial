@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"
 #include "Tank.h"
 #include "GameFramework/PlayerController.h"
 #include "TankPlayerController.generated.h" //Must be last include
@@ -32,7 +33,13 @@ class BATTLETANK_API ATankPlayerController : public APlayerController
 	void AimTowardsCrosshair();
 
 	//Retuns coords of intersection line of sight with landscape.
-	bool GetSightRayAimLocation(FVector* AimLocation) const; 
+	bool GetSightRayAimLocation(FVector &AimLocation) const; 
+
+	//Get a look direction through a point on the screen
+	bool GetLookDirection(FVector2D PointOnScreen, FVector& SightStart, FVector& LookDirection) const;
+
+	//Get world position of the intersection point of specified ray with some object of the world
+	bool GetLookVectorAimLocation(FVector LookDirection, FVector LookStartLocation, FVector& LookLocation) const;
 
 	//Screen coordinate X of crosshair, set up in TankPlayerController_BP blueprint (0..1).
 	UPROPERTY(EditAnywhere)
@@ -41,4 +48,8 @@ class BATTLETANK_API ATankPlayerController : public APlayerController
 	//Screen coordinate Y of crosshair, set up in TankPlayerController_BP blueprint (0..1).
 	UPROPERTY(EditAnywhere)
 	float CrosshairY = 0.4;
+
+	//Limit of ray-tracing, when getting aimed point of the world
+	UPROPERTY(EditAnywhere)
+	float MaxAimDistance = 1000000.0;
 };
